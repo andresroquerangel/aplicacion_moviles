@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mi_app2/settings/app_value_notifier.dart';
+import 'package:day_night_switcher/day_night_switcher.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -33,6 +35,12 @@ class DashboardScreen extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               Navigator.pop(context);
+            },
+          ),
+          DayNightSwitcher(
+            isDarkModeEnabled: AppValueNotifier.banTheme.value,
+            onStateChanged: (isDarkModeEnabled) {
+              AppValueNotifier.banTheme.value = isDarkModeEnabled;
             },
           ),
         ],
