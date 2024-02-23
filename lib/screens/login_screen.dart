@@ -87,6 +87,24 @@ class _LoginScreenState extends State<LoginScreen> {
                                   });
                         });
                       }),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, "/register")
+                              .then((value) => {
+                                    setState(() {
+                                      isLoading = !isLoading;
+                                    })
+                                  });
+                        },
+                        child: const Text('Registrarse'),
+                        style: ButtonStyle(
+                            backgroundColor:
+                                MaterialStateProperty.all(Colors.blue),
+                            foregroundColor:
+                                MaterialStateProperty.all(Colors.white),
+                            minimumSize:
+                                MaterialStateProperty.all(const Size(200, 50))),
+                      ),
                       SignInButton(Buttons.Facebook, onPressed: () {}),
                       SignInButton(Buttons.GitHub, onPressed: () {})
                     ],

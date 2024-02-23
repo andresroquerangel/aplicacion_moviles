@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mi_app2/screens/dashboard_screen.dart';
 import 'package:mi_app2/screens/despensa_screen.dart';
+import 'package:mi_app2/screens/register_screen.dart';
 import 'package:mi_app2/screens/splash_screen.dart';
 import 'package:mi_app2/settings/app_value_notifier.dart';
 import 'package:mi_app2/settings/theme.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
             routes: {
               "/dash": (BuildContext context) => const DashboardScreen(),
               "/despensa": (BuildContext context) => const DespensaScreen(),
+              "/register": (BuildContext context) => const RegisterScreen(),
             },
           );
         });
