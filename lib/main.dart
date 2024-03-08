@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mi_app2/screens/dashboard_screen.dart';
 import 'package:mi_app2/screens/despensa_screen.dart';
+import 'package:mi_app2/screens/detail_movie_screen.dart';
+import 'package:mi_app2/screens/popular_movies_screen.dart';
 import 'package:mi_app2/screens/register_screen.dart';
 import 'package:mi_app2/screens/splash_screen.dart';
 import 'package:mi_app2/settings/app_value_notifier.dart';
@@ -26,6 +28,9 @@ class MyApp extends StatelessWidget {
               "/dash": (BuildContext context) => const DashboardScreen(),
               "/despensa": (BuildContext context) => const DespensaScreen(),
               "/register": (BuildContext context) => const RegisterScreen(),
+              "/movies" : (BuildContext context) => const PopularMoviesScreen(),
+            "/detail": (BuildContext context) => const DetailMovieScreen(),
+
             },
           );
         });
@@ -55,7 +60,7 @@ class _MyAppState extends State<MyApp> {
           ),
         ),
         drawer: Drawer(),
-        floatingActionButton: FloatingActionButton(
+        floatingActionButton: FloatingActionButton(rr
           backgroundColor: Colors.red,
           onPressed: () {
             contador++;

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mi_app2/database/products_database.dart';
 import 'package:mi_app2/model/products_model.dart';
 import 'package:intl/intl.dart';
+import 'package:mi_app2/settings/app_value_notifier.dart';
+import 'package:art_sweetalert/art_sweetalert.dart';
 
 class DespensaScreen extends StatefulWidget {
   const DespensaScreen({super.key});
@@ -21,9 +23,119 @@ class _DespensaScreenState extends State<DespensaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Mi despensa :)'),
+        actions: [
+          IconButton(
+              onPressed: () {
+                showModal(context, null);
+              },
+              icon: const Icon(Icons.shopping_bag))
+        ],
+      ),
+      body: ValueListenableBuilder(
+          valueListenable: AppValueNotifier.banProducts,
+          builder: (context, value, _) {
+            return FutureBuilder(
+                future: productsDB!.CONSULTAR(),
+                builder:
+                    (context, AsyncSnapshot<List<ProductosModel>> snapshot) {
+                  if (snapshot.hasError) {
+                    return const Center(
+                      child: Text('Algo salio mal :('),
+                    );
+                  } else {
+                    if (snapshot.hasData) {
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ListView.builder(
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            return itemDespensa(snapshot.data![index]);
+                          },
+                        ),
+                      );
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  }
+                });
+          }),
+    );
+  }
+
+  Widget itemDespensa(ProductosModel producto) {
+    return Container(
+      margin: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+          color: Colors.blueAccent,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.cyanAccent, width: 2)),
+      height: 100,
+      child: Column(
+        children: [
+          Text('${producto.nomProducto!}'),
+          Text('${producto.fechaCaducidad!}'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                  onPressed: () {
+                    showModal(context, producto);
+                  },
+                  icon: const Icon(Icons.edit)),
+              IconButton(
+                  onPressed: () async {
+                    ArtDialogResponse response = await ArtSweetAlert.show(
+                        barrierDismissible: false,
+                        context: context,
+                        artDialogArgs: ArtDialogArgs(
+                            denyButtonText: "Cancelar",
+                            title: "¿Estás seguro?",
+                            text: "¡No podrás revertir esta acción!",
+                            confirmButtonText: "Si, borralo",
+                            type: ArtSweetAlertType.warning));
+
+                    if (response == null) {
+                      return;
+                    }
+
+                    if (response.isTapConfirmButton) {
+                      productsDB!.ELIMINAR(producto.idProducto!).then((value) {
+                        if (value > 0) {
+                          ArtSweetAlert.show(
+                              context: context,
+                              artDialogArgs: ArtDialogArgs(
+                                  type: ArtSweetAlertType.success,
+                                  title: "¡Borrado!"));
+                        }
+                        AppValueNotifier.banProducts.value =
+                            !AppValueNotifier.banProducts.value;
+                      });
+                      return;
+                    }
+                  },
+                  icon: const Icon(Icons.delete))
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  showModal(context, ProductosModel? producto) {
     final conNombre = TextEditingController();
     final conCantidad = TextEditingController();
     final conFecha = TextEditingController();
+
+    if (producto != null) {
+      conNombre.text = producto.nomProducto!;
+      conCantidad.text = producto.canProducto!.toString();
+      conFecha.text = producto.fechaCaducidad!;
+    }
 
     final txtNombre = TextFormField(
       keyboardType: TextInputType.text,
@@ -37,114 +149,88 @@ class _DespensaScreenState extends State<DespensaScreen> {
       decoration: const InputDecoration(border: OutlineInputBorder()),
     );
 
-    final btnAgregar = ElevatedButton.icon(
-        onPressed: () {
-          productsDB!.INSERTAR({
-            "nomProducto": conNombre.text,
-            "canProducto": int.parse(conCantidad.text),
-            "fechaCaducidad": conFecha.text
-          }).then((value) {
-            Navigator.pop(context);
-            String msj = "";
-            if (value > 0) {
-              msj = "Producto insertado";
-            } else {
-              msj = "Ocurrio un error";
-            }
-            var snackbar = SnackBar(content: Text(msj));
-            ScaffoldMessenger.of(context).showSnackBar(snackbar);
-          });
-        },
-        icon: Icon(Icons.save),
-        label: Text('Guardar'));
-
     final space = SizedBox(
       height: 10,
     );
 
+    final btnAgregar = ElevatedButton.icon(
+        onPressed: () {
+          if (producto == null) {
+            productsDB!.INSERTAR({
+              "nomProducto": conNombre.text,
+              "canProducto": int.parse(conCantidad.text),
+              "fechaCaducidad": conFecha.text,
+            }).then((value) {
+              Navigator.pop(context);
+              String msj = "";
+              if (value > 0) {
+                AppValueNotifier.banProducts.value =
+                    !AppValueNotifier.banProducts.value;
+                msj = "Producto insertado";
+              } else {
+                msj = "ocurrio un error";
+              }
+              var snackbar = SnackBar(content: Text(msj));
+              ScaffoldMessenger.of(context).showSnackBar(snackbar);
+            });
+          } else {
+            productsDB!.ACTUALIZAR({
+              "idProducto": producto.idProducto,
+              "nomProducto": conNombre.text,
+              "canProducto": int.parse(conCantidad.text),
+              "fechaCaducidad": conFecha.text,
+            }).then((value) {
+              Navigator.pop(context);
+              String msj = "";
+              if (value > 0) {
+                AppValueNotifier.banProducts.value =
+                    !AppValueNotifier.banProducts.value;
+                msj = "Producto actualizado";
+              } else {
+                msj = "ocurrio un error";
+              }
+              var snackbar = SnackBar(content: Text(msj));
+              ScaffoldMessenger.of(context).showSnackBar(snackbar);
+            });
+          }
+        },
+        icon: const Icon(Icons.save),
+        label: const Text('Guardar'));
+
     final txtFecha = TextFormField(
-      controller: conFecha,
       keyboardType: TextInputType.none,
-      decoration: InputDecoration(border: OutlineInputBorder()),
+      controller: conFecha,
+      decoration: const InputDecoration(border: OutlineInputBorder()),
       onTap: () async {
-        final DateTime? pickedDate = await showDatePicker(
-          context: context,
-          initialDate: DateTime.now(),
-          firstDate: DateTime(2000),
-          lastDate: DateTime(2101),
-        );
+        DateTime? pickedDate = await showDatePicker(
+            context: context,
+            initialDate: DateTime.now(), //get today's date
+            firstDate: DateTime(
+                2000), //DateTime.now() - not to allow to choose before today.
+            lastDate: DateTime(2101));
 
         if (pickedDate != null) {
           String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
           setState(() {
-            conFecha.text =
-                formattedDate; //set foratted date to TextField value.
+            conFecha.text = formattedDate;
           });
-        } else {
-          print("Date is not selected");
-        }
+        } else {}
       },
     );
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mi despensa :)'),
-        actions: [
-          IconButton(
-              onPressed: () {
-                showModalBottomSheet(
-                    context: context,
-                    builder: (context) {
-                      return ListView(
-                        padding: EdgeInsets.all(10),
-                        children: [
-                          txtNombre,
-                          space,
-                          txtCantidad,
-                          space,
-                          txtFecha,
-                          space,
-                          btnAgregar
-                        ],
-                      );
-                    });
-              },
-              icon: const Icon(Icons.shopping_bag))
-        ],
-      ),
-      body: FutureBuilder(
-          future: productsDB!.CONSULTAR(),
-          builder: (context, AsyncSnapshot<List<ProductosModel>> snapshot) {
-            if (snapshot.hasError) {
-              print(snapshot.error);
-              return const Center(
-                child: Text('Algo salio mal :('),
-              );
-            } else {
-              if (snapshot.hasData) {
-                return ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    return itemDespensa(snapshot.data![index]);
-                  },
-                );
-              } else {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-            }
-          }),
-    );
-  }
-
-  Widget itemDespensa(ProductosModel producto) {
-    return Container(
-      height: 100,
-      child: Column(children: [
-        Text('${producto.nomProducto!}'),
-        Text('${producto.fechaCaducidad!}'),
-      ]),
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return ListView(padding: const EdgeInsets.all(10), children: [
+          txtNombre,
+          space,
+          txtCantidad,
+          space,
+          txtFecha,
+          space,
+          btnAgregar
+        ]);
+      },
     );
   }
 }
