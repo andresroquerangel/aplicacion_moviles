@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mi_app2/screens/dashboard_screen.dart';
 import 'package:mi_app2/screens/despensa_screen.dart';
@@ -8,7 +9,16 @@ import 'package:mi_app2/screens/splash_screen.dart';
 import 'package:mi_app2/settings/app_value_notifier.dart';
 import 'package:mi_app2/settings/theme.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+      options: FirebaseOptions(
+          apiKey: "AIzaSyBv7GJUi0sjvnOz7cfJbf70QYcPhbwvJVQ",
+          appId: "1:576187361770:android:a72af3e728edfb91c92a93",
+          messagingSenderId: "576187361770",
+          projectId: "prueba-3d4cf"));
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -28,9 +38,8 @@ class MyApp extends StatelessWidget {
               "/dash": (BuildContext context) => const DashboardScreen(),
               "/despensa": (BuildContext context) => const DespensaScreen(),
               "/register": (BuildContext context) => const RegisterScreen(),
-              "/movies" : (BuildContext context) => const PopularMoviesScreen(),
-            "/detail": (BuildContext context) => const DetailMovieScreen(),
-
+              "/movies": (BuildContext context) => const PopularMoviesScreen(),
+              "/detail": (BuildContext context) => const DetailMovieScreen(),
             },
           );
         });

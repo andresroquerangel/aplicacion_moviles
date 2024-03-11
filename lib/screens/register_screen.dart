@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mi_app2/services/email_auth_firebase.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,6 +19,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authFirebase = EmailAuthFirebase();
+
     final conNombre = TextEditingController();
     final conEmail = TextEditingController();
     final conPassword = TextEditingController();
@@ -156,56 +159,66 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   const Size(200, 50))),
                           onPressed: () {
                             if (_keyForm.currentState!.validate()) {
-                              showModalBottomSheet(
-                                context: context,
-                                builder: (context) {
-                                  return SizedBox(
-                                      height: 200,
-                                      width: double.infinity,
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.check_circle_outline,
-                                            color: Colors.green,
-                                            size: 80,
-                                          ),
-                                          const SizedBox(
-                                            height: 10,
-                                          ),
-                                          const Text(
-                                            'Te has registrado con éxito',
-                                            style: TextStyle(fontSize: 20),
-                                          ),
-                                          const SizedBox(
-                                            height: 20,
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              conNombre.clear();
-                                              conEmail.clear();
-                                              conPassword.clear();
-                                              Navigator.pop(context);
-                                              Navigator.pushNamed(
-                                                  context, "/despensa");
-                                            },
-                                            style: ButtonStyle(
-                                                backgroundColor:
-                                                    MaterialStateProperty.all(
-                                                        Colors.blue),
-                                                foregroundColor:
-                                                    MaterialStateProperty.all(
-                                                        Colors.white),
-                                                minimumSize:
-                                                    MaterialStateProperty.all(
-                                                        const Size(200, 50))),
-                                            child: Text('Continuar'),
-                                          )
-                                        ],
-                                      ));
-                                },
-                              );
+                              authFirebase
+                                  .signUpUser(
+                                      name: conNombre.text,
+                                      email: conEmail.text,
+                                      password: conPassword.text)
+                                  .then((value) {
+                                if (value) {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    builder: (context) {
+                                      return SizedBox(
+                                          height: 200,
+                                          width: double.infinity,
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(
+                                                Icons.check_circle_outline,
+                                                color: Colors.green,
+                                                size: 80,
+                                              ),
+                                              const SizedBox(
+                                                height: 10,
+                                              ),
+                                              const Text(
+                                                'Te has registrado con éxito',
+                                                style: TextStyle(fontSize: 20),
+                                              ),
+                                              const SizedBox(
+                                                height: 20,
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  conNombre.clear();
+                                                  conEmail.clear();
+                                                  conPassword.clear();
+                                                  Navigator.pop(context);
+                                                  Navigator.pushNamed(
+                                                      context, "/despensa");
+                                                },
+                                                style: ButtonStyle(
+                                                    backgroundColor:
+                                                        MaterialStateProperty
+                                                            .all(Colors.blue),
+                                                    foregroundColor:
+                                                        MaterialStateProperty
+                                                            .all(Colors.white),
+                                                    minimumSize:
+                                                        MaterialStateProperty
+                                                            .all(const Size(
+                                                                200, 50))),
+                                                child: Text('Continuar'),
+                                              )
+                                            ],
+                                          ));
+                                    },
+                                  );
+                                }
+                              });
                             }
                           },
                           child: const Text('Registrarse'),
