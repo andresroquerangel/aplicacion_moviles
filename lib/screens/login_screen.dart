@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/button_view.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:mi_app2/screens/dashboard_screen.dart';
+import 'package:mi_app2/services/email_auth_firebase.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,21 +12,34 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final authFirebase = EmailAuthFirebase();
   bool isLoading = false;
-
-  final txtUser = TextFormField(
-    keyboardType: TextInputType.emailAddress,
-    decoration: const InputDecoration(border: OutlineInputBorder()),
-  );
-
-  final pwdUser = TextFormField(
-    keyboardType: TextInputType.text,
-    obscureText: true,
-    decoration: const InputDecoration(border: OutlineInputBorder()),
-  );
+  final conEmail = TextEditingController();
+  final conPassword = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    final txtEmail = TextFormField(
+      keyboardType: TextInputType.emailAddress,
+      decoration: const InputDecoration(
+        labelText: 'Correo electrónico',
+        prefixIcon: Icon(Icons.email),
+        border: UnderlineInputBorder(),
+      ),
+      controller: conEmail,
+    );
+
+    final pwdUser = TextFormField(
+      keyboardType: TextInputType.text,
+      obscureText: true,
+      decoration: const InputDecoration(
+        labelText: 'Contraseña',
+        prefixIcon: Icon(Icons.password),
+        border: UnderlineInputBorder(),
+      ),
+      controller: conPassword,
+    );
+
     return Scaffold(
       body: Container(
         height: MediaQuery.of(context).size.height,
@@ -50,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: ListView(
                     shrinkWrap: true,
                     children: [
-                      txtUser,
+                      txtEmail,
                       const SizedBox(
                         height: 10,
                       ),
@@ -73,20 +87,56 @@ class _LoginScreenState extends State<LoginScreen> {
                         setState(() {
                           isLoading = !isLoading;
                         });
-                        Future.delayed(const Duration(milliseconds: 5000), () {
-                          /*Navigator.push(
+                        authFirebase
+                            .signInUser(
+                                password: conPassword.text,
+                                email: conEmail.text)
+                            .then((value) {
+                          if (value) {
+                            Future.delayed(const Duration(milliseconds: 5000),
+                                () {
+                              /*Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => const DashboardScreen(),
                               ));*/
+                              Navigator.pushNamed(context, "/dash")
+                                  .then((value) => {
+                                        setState(() {
+                                          isLoading = !isLoading;
+                                        })
+                                      });
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text(
+                                'No login',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              backgroundColor: Colors.greenAccent,
+                            ));
+                          }
+                        });
+                      }),
+                      TextButton(
+                        onPressed: () {
                           Navigator.pushNamed(context, "/dash")
                               .then((value) => {
                                     setState(() {
                                       isLoading = !isLoading;
                                     })
                                   });
-                        });
-                      }),
+                        },
+                        child: const Text('Entrar sin credenciales'),
+                        style: ButtonStyle(
+                            backgroundColor:
+                                MaterialStateProperty.all(Colors.blue),
+                            foregroundColor:
+                                MaterialStateProperty.all(Colors.white),
+                            minimumSize:
+                                MaterialStateProperty.all(const Size(200, 50))),
+                      ),
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(context, "/register")

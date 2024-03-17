@@ -2,6 +2,7 @@
 
 class PopularModel {
   String? backdropPath;
+  List? genres;
   int? id;
   String? originalLanguage;
   String? originalTitle;
@@ -12,9 +13,11 @@ class PopularModel {
   String? title;
   double? voteAverage;
   int? voteCount;
+  String? videoUrl;
 
   PopularModel({
     this.backdropPath,
+    this.genres,
     this.id,
     this.originalLanguage,
     this.originalTitle,
@@ -25,12 +28,14 @@ class PopularModel {
     this.title,
     this.voteAverage,
     this.voteCount,
+    this.videoUrl,
   });
 
   factory PopularModel.fromMap(Map<String, dynamic> movie) {
     return PopularModel(
       id: movie['id'],
       backdropPath: movie['backdrop_path'],
+      genres: movie['genre_ids'],
       posterPath: movie['poster_path'],
       originalLanguage: movie['original_language'],
       originalTitle: movie['original_title'],
@@ -40,6 +45,7 @@ class PopularModel {
       title: movie['title'],
       voteAverage: movie['vote_average'],
       voteCount: movie['vote_count'],
+      videoUrl: movie['key'],
     );
   }
 }
