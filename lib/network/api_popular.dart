@@ -8,6 +8,8 @@ class ApiPopular {
       "https://api.themoviedb.org/3/movie/popular?api_key=1e68617243e6c01e3d7606f2ca48595b&language=es-MX&page=1";
   final dio = Dio();
 
+  final url_favorite = "https://api.themoviedb.org/3/account/21061274/favorite/movies?api_key=558a6043ffaf21488d74cb6f44181b9a&session_id=9f4adcec50f3d8bcf717df8a6786811c14ec828a&language=es-MX";
+
   final URL_GENRE =
       "https://api.themoviedb.org/3/genre/movie/list?api_key=1e68617243e6c01e3d7606f2ca48595b&language=es-MX";
   var listGenresMap = null;
@@ -35,6 +37,18 @@ class ApiPopular {
             } else {
               listMoviesMap[index]['key'] = '';
             }
+          }
+
+          response = await dio.get(url_favorite);
+          final listFavories = response.data['results'] as List;
+          if(response.statusCode==200){
+            Future.forEach(listFavories.asMap().entries, (entry) async{
+              //final index2 = entry.key;
+              final favorite = entry.value;
+              if(listMoviesMap[index]['id']==favorite['id']){
+                listMoviesMap[index]['favorite']=true;
+              }
+            });
           }
         });
       }

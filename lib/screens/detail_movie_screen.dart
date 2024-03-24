@@ -1,12 +1,11 @@
 // Importa los paquetes necesarios
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:mi_app2/model/actor_model.dart';
 import 'package:mi_app2/model/popular_model.dart';
 import 'package:mi_app2/network/api_actors.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:mi_app2/network/api_favorites.dart';
 
 // Define tu clase DetailMovieScreen
 class DetailMovieScreen extends StatefulWidget {
@@ -18,22 +17,28 @@ class DetailMovieScreen extends StatefulWidget {
 
 class _DetailMovieScreenState extends State<DetailMovieScreen> {
   ApiActor? apiActor;
+  ApiFavorites? apiFavorites;
+  bool? isFavorite;
 
   @override
   void initState() {
     super.initState();
     apiActor = ApiActor();
+    apiFavorites = ApiFavorites();
   }
 
   @override
   Widget build(BuildContext context) {
     final popularModel =
         ModalRoute.of(context)!.settings.arguments as PopularModel;
+    setState(() {
+      isFavorite = popularModel.favorite;
+    });
     final videoID = YoutubePlayer.convertUrlToId(
         'https://www.youtube.com/watch?v=${popularModel.videoUrl}');
-    final _controller = YoutubePlayerController(
+    final controller = YoutubePlayerController(
         initialVideoId: videoID != null ? videoID! : '',
-        flags: YoutubePlayerFlags(autoPlay: false));
+        flags: const YoutubePlayerFlags(autoPlay: false));
     return Scaffold(
       body: SingleChildScrollView(
         child: Stack(children: [
@@ -55,7 +60,7 @@ class _DetailMovieScreenState extends State<DetailMovieScreen> {
             right: 0,
             bottom: 0,
             child: Container(
-              color: Colors.black.withOpacity(0.5), // Opacidad del 50%
+              color: Colors.black.withOpacity(0.7), // Opacidad del 50%
             ),
           ),
           Positioned(
@@ -64,37 +69,59 @@ class _DetailMovieScreenState extends State<DetailMovieScreen> {
               children: [
                 SizedBox(height: MediaQuery.of(context).size.height * 0.2),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     children: [
                       SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.3,
-                        child: Image.network(
+                          width: MediaQuery.of(context).size.width * 0.34,
+                          child: Hero(
+                            tag: 'poster_${popularModel.id}',
+                            child: Image.network(
+                                'https://image.tmdb.org/t/p/w500/${popularModel.posterPath}'), // Widget a animar
+                          )
+                          /*Image.network(
                           'https://image.tmdb.org/t/p/w500/${popularModel.posterPath}',
-                        ),
-                      ),
+                        ),*/
+                          ),
                       Expanded(
                         child: Padding(
-                          padding: EdgeInsets.only(left: 20, top: 50),
+                          padding: const EdgeInsets.only(left: 20, top: 50),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 popularModel.title!,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 22,
                                 ),
                               ),
-                              Text(
-                                DateTime.parse(popularModel.releaseDate!)
-                                    .year
-                                    .toString(),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                              ),
+                              IconButton(
+                                  onPressed: () {
+                                    if (isFavorite == null) {
+                                      apiFavorites!
+                                          .addToFavorites(popularModel.id!);
+                                      setState(() {
+                                        isFavorite = true;
+                                        popularModel.favorite = true;
+                                      });
+                                    } else {
+                                      if (isFavorite == true) {
+                                        apiFavorites!.removeFromFavorites(
+                                            popularModel.id!);
+                                        setState(() {
+                                          isFavorite = null;
+                                          popularModel.favorite = null;
+                                        });
+                                      }
+                                    }
+                                  },
+                                  icon: Icon(
+                                      (isFavorite == null
+                                          ? Icons.favorite_border
+                                          : Icons.favorite),
+                                      size: 30,
+                                      color: Colors.red)),
                               RatingBar(
                                 initialRating: popularModel.voteAverage! / 2,
                                 direction: Axis.horizontal,
@@ -113,7 +140,7 @@ class _DetailMovieScreenState extends State<DetailMovieScreen> {
                               ),
                               Text(
                                 popularModel.genres!.join(", "),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey,
                                 ),
@@ -126,15 +153,15 @@ class _DetailMovieScreenState extends State<DetailMovieScreen> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Actores',
                         style: TextStyle(fontSize: 20, color: Colors.white),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       SizedBox(
                         height: 100,
                         child: FutureBuilder(
@@ -150,20 +177,32 @@ class _DetailMovieScreenState extends State<DetailMovieScreen> {
                                     final actor = snapshot.data![index];
                                     if (actor.knownForDepartment == 'Acting') {
                                       return Padding(
-                                        padding: EdgeInsets.symmetric(
+                                        padding: const EdgeInsets.symmetric(
                                             horizontal: 10),
                                         child: Column(
                                           children: [
-                                            CircleAvatar(
-                                              radius: 30,
-                                              backgroundImage: NetworkImage(
-                                                'https://image.tmdb.org/t/p/w500/${actor.profilePath}',
-                                              ),
-                                            ),
-                                            SizedBox(height: 5),
+                                            (actor.profilePath != null)
+                                                ? CircleAvatar(
+                                                    radius: 30,
+                                                    backgroundImage:
+                                                        NetworkImage(
+                                                      'https://image.tmdb.org/t/p/w500/${actor.profilePath}',
+                                                    ),
+                                                  )
+                                                : const CircleAvatar(
+                                                    backgroundColor:
+                                                        Colors.white,
+                                                    radius: 30,
+                                                    child: Icon(
+                                                      Icons.person,
+                                                      color: Colors.black,
+                                                      size: 45,
+                                                    ),
+                                                  ),
+                                            const SizedBox(height: 5),
                                             Text(
                                               actor.originalName!,
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                   fontSize: 12,
                                                   color: Colors.white),
                                             ),
@@ -171,14 +210,14 @@ class _DetailMovieScreenState extends State<DetailMovieScreen> {
                                         ),
                                       );
                                     } else {
-                                      return SizedBox.shrink();
+                                      return const SizedBox.shrink();
                                     }
                                   }),
                                 ),
                               );
                             } else {
                               if (snapshot.hasError) {
-                                return Text('Hay error');
+                                return const Text('Hay error');
                               } else {
                                 return const Center(
                                   child: CircularProgressIndicator(),
@@ -188,27 +227,28 @@ class _DetailMovieScreenState extends State<DetailMovieScreen> {
                           },
                         ),
                       ),
-                      SizedBox(height: 20),
-                      Text(
+                      const SizedBox(height: 20),
+                      const Text(
                         'Descripción',
                         style: TextStyle(fontSize: 20, color: Colors.white),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       Text(
                         popularModel.overview!,
                         textAlign: TextAlign.justify,
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       videoID == null
                           ? SizedBox(
                               height: MediaQuery.of(context).size.height * 0.22,
                             )
                           : YoutubePlayer(
-                              controller: _controller,
+                              controller: controller,
                               showVideoProgressIndicator: true,
                             ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),

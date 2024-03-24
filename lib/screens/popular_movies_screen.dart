@@ -22,6 +22,7 @@ class _PopularMoviesScreenState extends State<PopularMoviesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: Text('Películas'),),
       body: FutureBuilder(
         future: apiPopular!.getPopularMovie(),
         builder: (context, AsyncSnapshot<List<PopularModel>?> snapshot) {
@@ -38,10 +39,10 @@ class _PopularMoviesScreenState extends State<PopularMoviesScreen> {
                   onTap: () => Navigator.pushNamed(context, "/detail",
                       arguments: snapshot.data![index]),
                   child: Hero(
-                    tag: 'imageHero',
-                    child: Image.network(
-                        'https://image.tmdb.org/t/p/w500/${snapshot.data![index].posterPath}'), // Widget a animar
-                  ),
+                      tag: 'poster_${snapshot.data![index].id}',
+                      child: Image.network(
+                          'https://image.tmdb.org/t/p/w500/${snapshot.data![index].posterPath}'), // Widget a animar
+                    ),
                 );
               },
             );
